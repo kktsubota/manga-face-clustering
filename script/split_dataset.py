@@ -21,6 +21,6 @@ titles_dict["val"] = titles[:10]
 titles_dict["train"] = titles[10:]
 
 for split in {"train", "val", "test"}:
-    with open("dataset/{}.txt".format(split), "w") as f:
+    with open("dataset/{}_titles.txt".format(split), "w") as f:
         for title in titles_dict[split]:
             f.write(title + "\n")
