@@ -1,5 +1,6 @@
 import argparse
 
+import pandas as pd
 import numpy as np
 from sklearn.cluster import KMeans
 import torch
@@ -13,7 +14,7 @@ from pre_train import extract_features
 from metrics import cluster_accuracy, nmi_score
 
 
-def evaluate(model, val_dloader):
+def evaluate(model, val_dloader, fast: bool = False):
     model.eval()
     features = list()
     labels = list()
@@ -25,7 +26,8 @@ def evaluate(model, val_dloader):
 
     features = np.concatenate(features, axis=0)
     labels = np.concatenate(labels, axis=0)
-    kmeans = KMeans(np.unique(labels).size, n_init=1000)
+    n_init: int = 1 if fast else 1000
+    kmeans = KMeans(np.unique(labels).size, n_init=n_init)
     preds = kmeans.fit_predict(features)
 
     return cluster_accuracy(labels, preds), nmi_score(labels, preds)
@@ -35,6 +37,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("manga109_root", help="/path/to/Manga109_20xx_xx_xx")
     parser.add_argument("--data_root", default="dataset/")
+    parser.add_argument("--fast", action="store_true")
     parser.add_argument("--model_path", default=None)
     args = parser.parse_args()
 
@@ -61,6 +64,7 @@ def main():
         ]
     )
 
+    score_dict = dict(accuracy=list(), nmi=list())
     for title in titles:
         val_data = MangaDataset(
             args.manga109_root,
@@ -72,8 +76,16 @@ def main():
         val_dloader = torch.utils.data.DataLoader(
             val_data, 50, shuffle=False, num_workers=4, drop_last=False
         )
-        acc, nmi = evaluate(model, val_dloader)
+        acc, nmi = evaluate(model, val_dloader, args.fast)
         print(title, "Accuracy: {:.3f}, NMI: {:.3f}".format(acc, nmi))
+        score_dict["accuracy"].append(acc)
+        score_dict["nmi"].append(nmi)
+
+    df = pd.DataFrame.from_dict(score_dict)
+    df.index = titles
+    df.to_csv("results/pre-train.csv")
+    print(df)
+    print(df.mean())
 
 
 if __name__ == "__main__":
