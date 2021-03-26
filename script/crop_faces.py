@@ -32,7 +32,7 @@ def main():
                 books.append(line.rstrip())
 
     for book in tqdm.tqdm(books):
-        annotation = parser.get_annotation(book=book)
+        annotation = parser.get_annotation(book=book, annotation_type="annotations.v2018.05.31")
         for page in annotation["page"]:
             name = "{:03d}.jpg".format(page["@index"])
             path = parser.root_dir / "images" / annotation["title"] / name
