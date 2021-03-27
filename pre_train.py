@@ -63,6 +63,7 @@ def main():
     parser.add_argument("--data_root", default="dataset")
     parser.add_argument("--batchsize", "-b", type=int, default=64)
     parser.add_argument("--epoch", "-e", type=int, default=200)
+    parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--out", default="results", type=Path)
     args = parser.parse_args()
 
@@ -131,7 +132,9 @@ def main():
     model.cuda()
     criterion.cuda()
 
-    optimizer = optim.SGD(model.parameters(), lr=1e-3, momentum=0.9, weight_decay=1e-4)
+    optimizer = optim.SGD(
+        model.parameters(), lr=args.lr, momentum=0.9, weight_decay=1e-4
+    )
 
     train_dloader = torch.utils.data.DataLoader(
         train_data, args.batchsize, shuffle=True, num_workers=4
