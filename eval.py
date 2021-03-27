@@ -1,4 +1,5 @@
 import argparse
+import os
 
 import pandas as pd
 import numpy as np
@@ -39,6 +40,7 @@ def main():
     parser.add_argument("--data_root", default="dataset/")
     parser.add_argument("--fast", action="store_true")
     parser.add_argument("--model_path", default=None)
+    parser.add_argument("--out", default="results/pre-train.csv")
     args = parser.parse_args()
 
     model = models.resnet50(pretrained=True)
@@ -48,7 +50,7 @@ def main():
     model.cuda()
 
     titles = list()
-    with open("dataset/test_titles.txt") as f:
+    with open(os.path.join(args.data_root, "test_titles.txt")) as f:
         for line in f:
             titles.append(line.rstrip())
 
@@ -83,7 +85,7 @@ def main():
 
     df = pd.DataFrame.from_dict(score_dict)
     df.index = titles
-    df.to_csv("results/pre-train.csv")
+    df.to_csv(args.out)
     print(df)
     print(df.mean())
 

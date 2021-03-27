@@ -1,25 +1,25 @@
 import argparse
 import logging
+import os
 from pathlib import Path
 
 import numpy as np
 from sklearn.cluster import KMeans
 import torch
-from torch import optim
 from torch import nn
+from torch import optim
 from torch.nn import functional as F
+import torch.backends.cudnn
 import torch.utils.data
 from torchvision import models
 from torchvision import transforms
 
-from metrics import nmi_score
 from data import MangaDataset
+from metrics import nmi_score
 from transforms import RandomGammaCorrection
 
 
-logger = logging.getLogger(__name__)
-fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
-logging.basicConfig(level=logging.DEBUG, format=fmt)
+torch.backends.cudnn.benchmark = True
 
 
 def extract_features(self, x):
@@ -67,12 +67,19 @@ def main():
     args = parser.parse_args()
 
     args.out.mkdir(exist_ok=True, parents=True)
+
+    # logging
+    logger = logging.getLogger(__name__)
+    fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
+    logging.basicConfig(filename=(args.out / "log"), level=logging.DEBUG, format=fmt)
+    logger.info(args)
+
     train_titles = list()
     val_titles = list()
-    with open("dataset/train_titles.txt") as f:
+    with open(os.path.join(args.data_root, "train_titles.txt")) as f:
         for line in f:
             train_titles.append(line.rstrip())
-    with open("dataset/val_titles.txt") as f:
+    with open(os.path.join(args.data_root, "val_titles.txt")) as f:
         for line in f:
             val_titles.append(line.rstrip())
 
@@ -132,7 +139,9 @@ def main():
     val_dloader = torch.utils.data.DataLoader(
         val_data, args.batchsize, shuffle=False, num_workers=4, drop_last=False
     )
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.1)
+    scheduler = optim.lr_scheduler.StepLR(
+        optimizer, step_size=args.epoch // 2, gamma=0.1
+    )
 
     nmi: float = evaluate(model, val_dloader)
     logger.info("NMI = {}".format(nmi))

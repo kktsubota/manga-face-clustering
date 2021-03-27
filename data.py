@@ -30,7 +30,7 @@ class MangaDataset(torch.utils.data.Dataset):
         self.transform = transform
 
         chara_others = set()
-        with open("dataset/others_ids.txt") as f:
+        with open(os.path.join(self.data_root, "others_ids.txt")) as f:
             for line in f:
                 chara_others.add(line.rstrip())
         # obtain list of character ids and file paths
@@ -65,7 +65,6 @@ class MangaDataset(torch.utils.data.Dataset):
     def __getitem__(self, i):
         label = self.labels[i]
         path = self.paths[i]
-        # RGB -> BGR
         img = Image.open(
             os.path.join(self.data_root, "images", self.classes[label], path)
         ).convert("RGB")
