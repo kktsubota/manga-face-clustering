@@ -25,15 +25,15 @@ def extract_features(self: nn.Module, x: torch.Tensor):
     return x
 
 
+@torch.no_grad()
 def evaluate(model, val_dloader, fast: bool = False):
     model.eval()
     features = list()
     labels = list()
     for img, label in val_dloader:
-        with torch.no_grad():
-            feat = extract_features(model, img.cuda())
-            features.append(feat.cpu().numpy())
-            labels.append(label.numpy())
+        feat = extract_features(model, img.cuda())
+        features.append(feat.cpu().numpy())
+        labels.append(label.numpy())
 
     features = np.concatenate(features, axis=0)
     labels = np.concatenate(labels, axis=0)
