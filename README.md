@@ -7,6 +7,8 @@ Official PyTorch **reimplementation** of "Adaptation of Manga Face Representatio
 pip install -r requirements.txt
 ```
 
+We conduct experiments using `torch==1.8.0+cu111` and `torchvision==0.9.0+cu111`.
+
 ## How to Use
 ### Dataset Preparation
 Download the Manga109 dataset from [the official website](http://www.manga109.org/en/index.html).
