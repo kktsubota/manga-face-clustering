@@ -1,0 +1,7 @@
+manga109api
+opencv-python
+pandas
+scikit-learn
+torch
+torchvision
+tqdm
