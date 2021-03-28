@@ -2,8 +2,6 @@ import argparse
 import os
 
 import pandas as pd
-import numpy as np
-from sklearn.cluster import KMeans
 import torch
 import torch.utils.data
 from torch import nn
@@ -11,27 +9,7 @@ from torchvision import models
 from torchvision import transforms
 
 from data import MangaDataset
-from pre_train import extract_features
-from metrics import cluster_accuracy, nmi_score
-
-
-def evaluate(model, val_dloader, fast: bool = False):
-    model.eval()
-    features = list()
-    labels = list()
-    for img, label in val_dloader:
-        with torch.no_grad():
-            feat = extract_features(model, img.cuda())
-            features.append(feat.cpu().numpy())
-            labels.append(label.numpy())
-
-    features = np.concatenate(features, axis=0)
-    labels = np.concatenate(labels, axis=0)
-    n_init: int = 1 if fast else 1000
-    kmeans = KMeans(np.unique(labels).size, n_init=n_init)
-    preds = kmeans.fit_predict(features)
-
-    return cluster_accuracy(labels, preds), nmi_score(labels, preds)
+from utils import evaluate
 
 
 def main():
@@ -78,10 +56,10 @@ def main():
         val_dloader = torch.utils.data.DataLoader(
             val_data, 50, shuffle=False, num_workers=4, drop_last=False
         )
-        acc, nmi = evaluate(model, val_dloader, args.fast)
-        print(title, "Accuracy: {:.3f}, NMI: {:.3f}".format(acc, nmi))
-        score_dict["accuracy"].append(acc)
-        score_dict["nmi"].append(nmi)
+        score = evaluate(model, val_dloader, args.fast)
+        print(title, "Accuracy: {:.3f}, NMI: {:.3f}".format(score["accuracy"], score["nmi"]))
+        score_dict["accuracy"].append(score["accuracy"])
+        score_dict["nmi"].append(score["nmi"])
 
     df = pd.DataFrame.from_dict(score_dict)
     df.index = titles

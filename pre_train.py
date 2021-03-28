@@ -3,58 +3,20 @@ import logging
 import os
 from pathlib import Path
 
-import numpy as np
-from sklearn.cluster import KMeans
 import torch
 from torch import nn
 from torch import optim
-from torch.nn import functional as F
 import torch.backends.cudnn
 import torch.utils.data
 from torchvision import models
 from torchvision import transforms
 
 from data import MangaDataset
-from metrics import nmi_score
 from transforms import RandomGammaCorrection
+from utils import evaluate
 
 
 torch.backends.cudnn.benchmark = True
-
-
-def extract_features(self, x):
-    x = self.conv1(x)
-    x = self.bn1(x)
-    x = self.relu(x)
-    x = self.maxpool(x)
-
-    x = self.layer1(x)
-    x = self.layer2(x)
-    x = self.layer3(x)
-    x = self.layer4(x)
-
-    x = self.avgpool(x)
-    x = torch.flatten(x, 1)
-    x = F.normalize(x, p=2, dim=1)
-    return x
-
-
-def evaluate(model, val_dloader):
-    model.eval()
-    features = list()
-    labels = list()
-    for img, label in val_dloader:
-        with torch.no_grad():
-            feat = extract_features(model, img.cuda())
-            features.append(feat.cpu().numpy())
-            labels.append(label.numpy())
-
-    features = np.concatenate(features, axis=0)
-    labels = np.concatenate(labels, axis=0)
-    kmeans = KMeans(np.unique(labels).size, n_init=1)
-    preds = kmeans.fit_predict(features)
-
-    return nmi_score(labels, preds)
 
 
 def main():
@@ -146,7 +108,7 @@ def main():
         optimizer, step_size=args.epoch // 2, gamma=0.1
     )
 
-    nmi: float = evaluate(model, val_dloader)
+    nmi: float = evaluate(model, val_dloader, fast=True)["nmi"]
     logger.info("NMI = {}".format(nmi))
 
     for epoch in range(args.epoch):
@@ -168,7 +130,7 @@ def main():
                 )
         else:
             scheduler.step()
-            nmi: float = evaluate(model, val_dloader)
+            nmi: float = evaluate(model, val_dloader, fast=True)["nmi"]
             logger.info("NMI = {}".format(nmi))
 
         if epoch % 20 == 0:
