@@ -240,8 +240,8 @@ def main():
     init_dloader = torch.utils.data.DataLoader(
         train_data, args.batchsize, shuffle=False, num_workers=4
     )
-    transform = init_dloader.dataset.transform
-    train_dloader.dataset.transform = val_transform
+    transform = train_data.transform
+    train_data.transform = val_transform
     model.eval()
     with torch.no_grad():
         features = list()
@@ -249,7 +249,7 @@ def main():
             feature = extract_features(model, img.cuda())
             features.append(feature)
         features = torch.cat(features, dim=0)
-    init_dloader.dataset.transform = transform
+    train_data.transform = transform
 
     frames = [train_data.get_frame_id(i) for i in range(len(train_data))]
     pages = [train_data.get_page(i) for i in range(len(train_data))]
