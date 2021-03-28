@@ -33,6 +33,7 @@ def main():
 
     # logging
     logger = logging.getLogger(__name__)
+    logger.addHandler(logging.StreamHandler())
     fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
     logging.basicConfig(filename=(args.out / "log"), level=logging.DEBUG, format=fmt)
     logger.info(args)

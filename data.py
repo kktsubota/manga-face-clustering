@@ -116,11 +116,13 @@ class MangaFTDataset(MangaDataset):
             frame_bboxes = np.array(frame_bboxes)
 
             for face in page["face"]:
-                bbox = [face[attr] for attr in bbox_attr]
-                bbox = np.array(bbox)[np.newaxis]
-                ir = get_intersect_ratio(bbox, frame_bboxes)
-                idx = np.argmax(ir, axis=1).squeeze()
-                self.frame_dict[face["@id"]] = frame_ids[idx]
+                if len(frame_bboxes) != 0:
+                    bbox = [face[attr] for attr in bbox_attr]
+                    bbox = np.array(bbox)[np.newaxis]
+                    ir = get_intersect_ratio(bbox, frame_bboxes)
+                    idx = np.argmax(ir, axis=1).squeeze()
+                    self.frame_dict[face["@id"]] = frame_ids[idx]
+
                 self.page_dict[face["@id"]] = page["@index"]
 
     def __len__(self) -> int:
@@ -139,7 +141,8 @@ class MangaFTDataset(MangaDataset):
     def get_frame_id(self, i):
         path = self.paths[i]
         face_id, _ = os.path.splitext(path)
-        return self.frame_dict[face_id]
+        # str or None
+        return self.frame_dict.get(face_id)
 
     def get_page(self, i):
         path = self.paths[i]

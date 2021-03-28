@@ -53,6 +53,8 @@ class PairwiseLabel(object):
         # frame_id: list of indices of images
         frame_dict = defaultdict(list)
         for i, frame in enumerate(frames):
+            if frame is None:
+                continue
             frame_dict[frame].append(i)
 
         for indices in frame_dict.values():
@@ -160,6 +162,7 @@ def main():
 
     # logging
     logger = logging.getLogger(__name__)
+    logger.addHandler(logging.StreamHandler())
     fmt = "%(asctime)s %(levelname)s %(name)s :%(message)s"
     logging.basicConfig(filename=(args.out / "log"), level=logging.DEBUG, format=fmt)
     logger.info(args)
